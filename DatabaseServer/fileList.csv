@@ -1,0 +1,9 @@
+location,CSVData/
+static_gimmickList,static_gimmickList.csv
+static_leaderCharacterStatusList.csv,static_leaderCharacterStatusList.csv
+static_obstacleList,static_obstacleList.csv
+static_subCharacterStatusList,static_subCharacterStatusList.csv
+static_tilemap,static_tilemap.csv
+accountList,accountList.csv
+dackList,dackList.csv
+registerList,registerList.csv

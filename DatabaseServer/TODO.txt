@@ -1,0 +1,230 @@
+정현우:
+	10/14
+	=> DataControlStrategy 작성
+		=> Data의 종류에 따라 나뉨
+		=> ex) basicinfo, item_inventory...
+	=> ProtocolStrategy의 교체 to DataControlStrategy
+		=> ProtocolStrategy의 문제점 보완(다루는 데이터가 극히 한정됨)
+		=> 행동의 세분화(매칭, 구입, 인게임)보단 데이터의 세분화(basicinfo, dack...)가 필요
+		=> Strategy 패턴 + Singleton 패턴 + unordered_map 응용의 전략 호출
+	10/29
+	=> SQL CREATE TABLE 수정
+		=> 노트북의 데이터 기반으로 수정
+	=> reqSet... 구현
+	
+	11/01
+	=> Transactional Memory(Atomic 등...) 공부하기
+	=> 자주 바뀌는 설정은 전부 외부로 빼내기
+		=> KOREAIT <-> JHWHOUSE
+		=> IP
+	11/03
+	=> 프로토콜 수정
+		=> DBSERVER_RES_...부분 최고 앞단에 ID 추가 
+			- 완료
+		=> GAMESERVER_REQ_REGISTER 최고 앞단에 BOOL형 변수 추가(GOOGLEID or GUEST 판별 용)
+			- 착수
+			=> DB 구조 변경
+			=> GAMESERVER_REQ_REGISTER의 언패킹 과정 변경 -완료
+			=> DBSERVER_RES_BASICINFO의 패킹 과정 - 완료
+		=> 가입 되어있는지 확인하는 프로토콜 추가
+			- 완료
+		=> Application-Level-Transaction 구현
+			- 완료
+		=> 해당 내용들 기반으로 주석 수정 - 완료
+	11/05
+	= DBServerManager 함수 내부 구현
+		- 완성
+	= 로그인 회원가입
+		- 이월
+	= ID를 기반으로 USER를 찾아내는 함수가 필요함
+		- 완성
+	11/06
+	= DB 구조 변경
+		= Character_Inventory의 생성
+		= Costume_Dack의 삭제
+		= DBServer에서의 연관되는 함수의 재작성
+			= ADD GAMESERVER_REQ_CHARACTER_INVENTORY DONE
+			= ADD GAMESERVER_REQ_SET_CHARACTER_INVENTORY DONE
+			= FIX GAMESERVER_REQ_REGISTER DONE
+			= FIX GAMESERVER_REQ_WITHDRAW DONE
+			= proceed 수정 DONE
+
+		= GameServer에서의 연관되는 함수의 재작성
+			= ADD GAMESERVER_REQ_CHARACTER_INVENTORY
+			= ADD GAMESERVER_REQ_SET_CHARACTER_INVENTORY
+			= ADD DBSERVER_RES_CHARACTER_INVENTORY
+			= ADD DBSERVER_RES_SET_CHARACTER_INVENTORY
+	= DB 구조 변경
+		= DBServer
+			= Costume_Inventory의 subtyle 삭제(StaticData에 이미 포함됨)
+				- 완성
+			= Costume_Dack 배제 작업(Exclude)
+				- 1차: 주석처리(11/06) 완료
+				- 2차: 코드에서 삭제(11/08)
+				- 착수
+			= 리더 코스튬 필드 생성(어디에 놓을 것인지 정해야 됨)
+				- CHARACTER_DACK에 놓자
+				- 논리적: 캐릭터가 3명
+				- 기술적: 하나의 캐릭터에 코스튬이 3개
+			= CHARACTER_DACK 구조 변경
+				- leaderCharacter 추가
+			= 프로토콜 정리(주석)
+				- 저어어엉리
+
+		= GameServer
+			= Costume_Inventory의 subtyle 삭제(StaticData에 이미 포함됨)
+			= Costume_Dack 배제 작업(Exclude)
+			= 리더 코스튬 필드 생성(CHARACTER_DACK)
+			= CHARACTER_DACK에 leaderCharacter 추가
+			= 프로토콜 정리(주석)
+
+	11/07
+	= 기술 부채
+		= GOTO in DatabaseManager
+	= DB 수정
+		= register시, inventory부분에 시작에서부터 insert
+			= ITEM_INVENTORY: 0~6
+			= CHARACTER_INVENTORY: 0~3
+	= 코드 가시성 확보
+		= reqRegister 부분
+
+
+	...무수히 많은 수정
+
+
+	12/13
+	= DatabaseManager 정리
+		= switch~case문에서 함수 실행에서
+		  unordered_map<protocol, function<void(User&)>> 로 변경
+			= 가독성 + 탐색속도 향상
+
+	12/14
+	= INVENTORY류 변경
+		= DB구조 변경
+			= 아이템 추가 시, INVENTORY_NICKNAME TABLE의 추가에서
+			  INVENTORY TABLE 내부의 bool형 자료 값 변경으로 표현.
+				= 아이템 중복, 아이템 강화 등의 컨텐츠 추가가 없을 예정.
+				  아이템의 풀만 계속 넓어질 시, 이게 유리함.
+				  (ALTER로 변경)
+		= DatabaseManager.cpp 내부 변경
+			= 대부분 QUERY문 변경
+		= DataTable을 탐색하는 함수 제작
+			= function<bool(Record&)>형의 매개변수를 받고
+			  해당 매개변수를 조건삼아 탐색
+
+	12/15
+	= 네이밍 변경
+		= Character -> SubChara
+			= 리더 캐릭터의 변경은 일어나지 않음. 변경되는 것은 SUBCHARACTER밖에 없다.
+		= Item -> Artifact
+			= 강화 등의 컨텐츠가 들어가지 않는 이상, 기획과의 네이밍 통합을 거리낄 필요가 없다.
+	= 프르토콜 및 패킹&언패킹 변경(GAMESERVER 연동)
+		= DBSERVER CHANGE
+		= GAMESERVER_REQ_SET_SUBCHARA_INVENTORY
+			= [PROTOCOL][bool isSub1Exist][bool isSub2Exist][bool isSub3Exist]
+		= GAMESERVER_REQ_SET_ARTIFACT_INVENTORY
+			= [PROTOCOL][bool isArti1Exist][bool isArti2Exist][bool isArti3Exist][bool isArti4Exist][bool isArti5Exist][bool isArti6Exist][bool isArti7Exist]
+		= GAMESERVER_REQ_SET_COSTUME_INVENTORY
+			= [PROTOCOL][bool isCostu1Exist][bool isCostu2Exist][bool isCostu3Exist]
+
+		= GAMESERVER CHANGE
+		= DBSERVER_RES_SUBCHARA_INVENTORY
+			= [PROTOCOL][bool isSub1Exist][bool isSub2Exist][bool isSub3Exist]
+		= DBSERVER_RES_ARTIFACT_INVENTORY
+			= [PROTOCOL][bool isArti1Exist][bool isArti2Exist][bool isArti3Exist][bool isArti4Exist][bool isArti5Exist][bool isArti6Exist][bool isArti7Exist]
+		= DBSERVER_RES_COSTUME_INVENTORY
+			= [PROTOCOL][bool isCostu1Exist][bool isCostu2Exist][bool isCostu3Exist]
+	
+	12/16
+	= 일정에 따른 계획 변경
+		= 프로토콜 및 패킹&언패킹 변경(GAMESERVER 연동 -> GAMESERVER에 맞춰서 DBSERVER의 패킹)
+
+	12/17
+	= 프로토콜 및 패킹&언패킹 변경(GAMESERVER 연동)
+		= 전반적인 변경 방향: 테이블과 연관성 있는 네이밍 등을 서비스 관련으로 변경
+		= GAMESERVER_REQ_INVEN_ADD_SUBCHARA
+			= [PROTOCOL][int subCharaIndex]
+		= GAMESERVER_REQ_INVEN_ADD_ARTIFACT
+			= [PROTOCOL][int artiIndex]
+		= GAMESERVER_REQ_INVEN_ADD_COSTUME
+			= [PROTOCOL][int costumeIndex]
+
+		= DBSERVER_RES_GET_INVEN_SUBCHARA
+			= [PROTOCOL][bool is1Exist][bool is2Exist][bool is3Exist]
+		= DBSERVER_RES_GET_INVEN_ARTIFACT
+			= [PROTOCOL][bool is1Exist][bool is2Exist][bool is3Exist][bool is4Exist][bool is5Exist][bool is6Exist][bool is7Exist]
+		= DBSERVER_RES_GET_INVEN_COSTUME
+			= [PROTOCOL][bool is1Exist][bool is2Exist][bool is3Exist]
+	
+	12/19
+	= SQL PROCEDURE 적용
+		= SQL에 적용
+			= 테이블당 하나씩 INSERT_테이블명 PROCEDURE 생성
+			= 해당 PROCEDURE를 통합해서, ID와 NICK을 받는 REGISTER PROCEDURE 생성
+	
+	12/20
+	= SQL PROCEDURE 생성 계획
+		= 대부분의 서비스를 .sql로 변경, changeDB(...)에선 sql 불러와서 실행
+			= 이젠 내가 sql문을 조금 다룰 수 있게 되었다.
+			  PROCEDURE 내에서 많은 행위를 할 수 있게 된 만큼, cpp파일에서의 행위는
+			  줄어들 것이다
+			= 변경 예정인 서비스(DatabaseManager::functionMap에 등록된 함수)들은 다음과 같다
+			  //탐색 서비스
+			  reqBasicInfo
+			  reqMatchInfo
+			  reqCharaDack
+			  reqArtifactDack
+			  reqSubCharaInventory
+			  reqArtifactInventory
+			  reqCostumeInventory
+			  //변경 서비스
+			  reqSetBasicInfo
+			  reqSetMatchInfo
+			  reqSetCharaDack
+			  reqSetArtifactDack
+			  reqSetSubCharaInventory
+			  reqSetArtifactInventory
+			  reqSetCostumeInventory
+		= .sql파일을 수시로 불러오는 방식으로 변경(?)
+			= 이건 좀 고민을 해 봐야 한다
+			= 라이브 서비스 중에 변경이 가능하다는 것은 분명한 강점인데
+			  실행시간에 file read 시간을 추가 시키는 것이 이득인가는 고민을 해 봐야 알듯
+	12/21~26
+	= 서비스 방식 변경
+		= 테이블 당 프로토콜 n개 -> 서비스 중심 프로토콜 네이밍
+			= UseCase 작성. DB에 접근 하는 경우의 수를 찾고 그에 맞춰서 프로토콜 구성
+			= 
+	= SQL PROCEDURE 생성
+		= 과정은 다음과 같다
+		  1. PROCEDURE를 담은 sql파일을 만든다
+		  2. c++에서 sql parser를 확보, sql파일을 읽어들인다
+		  3. mysql_real_connect 이후, 해당 CREATE PROCEDURE문을 실행 시킨다(mysql_query())
+		  4. 중요: live-service에선 sql을 변경하지 않는 것으로 한다.
+		     만드려면 만들 수는 있을 텐데, 차례차례 해나간다는 마음가짐으로 해야 할 프로젝트인듯.
+	= 함수 이름 변경
+		= OnReceive 처럼 On을 앞에 붙이는 형식으로 바꾼다(unity의 MonoBehaviour처럼)
+	= INITTABLE 만들기
+		= REGISTER 프로시저에 들어가는 각 세부 PROCEDURE들은, TABLE당 하나씩 매칭되는
+		  INITTABLE을 가지고 있다(초기값 저장 전용).
+		  INITTABLE을 구현을 해야 REGISTER 기능이 제대로 실행 될 것이다.
+		= 모든 INITTABLE은 VER(버전)을 KEY값으로 갖는데
+		  TABLE에 ROW를 넣는것은 INSERT문이 아닌 CSV에서 읽어들이는 식으로 하려 한다
+		  이것도 방법이 있을 것 같은데, 한번 찾아보자.
+	12/24
+	= 문득 든 생각: DBServer에 항시 연결 되어 있을 필요가 있는가
+	= 필요 할 때 Accept 시키고, 일이 끝나면 Disconnect 시키는 방법...을 찾아보자
+	= 계속 접속을 유지 할 필요가 없으면 좋겠다
+	= 중요: GameServer<->DBServer에선 무조건 연결 되어 있어야 함(수시로 통신)
+		   User<->DBServer의 상황에서만 의미 있는 일이다(간헐적 통신)
+
+	12/26
+	= 포트폴리오로 제출
+
+	12/30
+	= 정리
+		= 미완성 부분
+			= 프로토콜 패킷 구조 변경
+			= .sql 끌어와서 쓰기(cpp, command line)(일일이 추가해서 썼음)
+		= 완성 부분
+			= PROCEDURE(REGISTER, WITHDRAW) 적용
+			= DatabaseManager::process(User&) 내부 변경(switch문 없앰)
