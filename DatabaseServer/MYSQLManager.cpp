@@ -6,19 +6,11 @@
 #include <algorithm>
 #include "Global.h"
 
-#ifdef KOREAIT
 const char* JHW_DB_HOST = NULL;
 const char* JHW_DB_USER = "root";
 const char* JHW_DB_PW = "1721";
 const char* JHW_DB_DBNAME = "kingsnake";
 const int	JHW_DB_PORT = 3306;
-#else
-const char* JHW_DB_HOST = NULL;
-const char* JHW_DB_USER = "root";
-const char* JHW_DB_PW = "mariaDB_970711!";
-const char* JHW_DB_DBNAME = "blackpages";
-const int	JHW_DB_PORT = 3306;
-#endif
 
 void changeQueryToUTF8(const char *pQuery, char* pUTFQuery)
 {
